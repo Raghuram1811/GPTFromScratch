@@ -25,8 +25,6 @@ class OllamaClient:
 def main():
     client = OllamaClient()
 
-    # print(client.get_models())
-
     messages = [
         {"role": "system", "content": "You are a helpful assistant."},
         {"role": "user", "content": "What is moon?"}
