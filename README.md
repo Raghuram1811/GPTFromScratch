@@ -1,0 +1,1 @@
+A from-scratch implementation of a GPT-style language model with a focus on understanding, extending, and productionizing LLM systems. Beyond core transformer mechanics, this repo evolves toward real-world applications such as fine-tuning, retrieval-augmented generation (RAG), and efficient model serving.
