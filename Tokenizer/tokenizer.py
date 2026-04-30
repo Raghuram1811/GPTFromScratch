@@ -1,6 +1,6 @@
 import os
 import sys
-from Tokenizer.vocaulary import VocabBuilder
+from vocaulary import VocabBuilder, VocabBuilder
 
 
 def main(sample_token=None):
