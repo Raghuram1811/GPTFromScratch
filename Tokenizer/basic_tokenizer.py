@@ -1,12 +1,8 @@
-import os
-import sys
+
 from vocaulary import VocabBuilder
 
-# def encode_token(vocabulary, token):
-#     return vocabulary.return_encoded_token_id(token)
-
-# def decode_token(vocabulary, token_id):
-#     return vocabulary.return_decoded_token(token_id)
+import os
+import sys
 
 def main(sample_token=None):
 
