@@ -1,12 +1,12 @@
 import os
 import sys
-from vocaulary import VocabBuilder, VocabBuilder
+from vocaulary import VocabBuilder
 
-def encode_token(vocabulary, token):
-    return vocabulary.return_encoded_token_id(token)
+# def encode_token(vocabulary, token):
+#     return vocabulary.return_encoded_token_id(token)
 
-def decode_token(vocabulary, token_id):
-    return vocabulary.return_decoded_token(token_id)
+# def decode_token(vocabulary, token_id):
+#     return vocabulary.return_decoded_token(token_id)
 
 def main(sample_token=None):
 
@@ -21,12 +21,12 @@ def main(sample_token=None):
         print(f"'{token}': {token_id}")
 
     # Encode the sample from corupus file
-    encoded_token_id = encode_token(vocabulary, sample_token)
+    encoded_token_id = vocabulary.return_encoded_token_id(sample_token)
     print(f"Encoded token for '{sample_token}': {encoded_token_id}")
 
     #Decode the token id back to token
     token_id = vocabulary.token_to_id.get(sample_token)
-    decoded_token = decode_token(vocabulary, token_id)
+    decoded_token = vocabulary.return_decoded_token(token_id)
     print(f"Decoded token for id '{token_id}': {decoded_token}")
 
 if __name__ == "__main__":
