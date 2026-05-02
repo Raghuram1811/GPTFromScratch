@@ -2,3 +2,5 @@
 *.bin
 *.vscode
 .vscode/settings.json
+Tokenizer/__pycache__/vocaulary.cpython-314.pyc
+.gitignore
