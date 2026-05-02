@@ -11,10 +11,8 @@ pairs of tokens to reduce vocabulary size and improve compression.
 
 References:
 - BPE Paper: https://arxiv.org/abs/1508.07909
-- Originally developed for Neural Machine Translation
+- Originally developed for building basic GPT model.
 
-License: MIT
-================================================================================
 """
 
 import math
