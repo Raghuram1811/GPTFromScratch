@@ -1,3 +1,5 @@
+import random
+
 
 class BPETokenizer():
 
@@ -24,20 +26,28 @@ class BPETokenizer():
         return new_tokens
 
     def tokenize(self, input: str):
+
         b_array = list(input.encode('utf-8'))
-
-        pair_frequency = sorted(self.rank_pairs(b_array).items(), key = lambda x: x[1], reverse = True)
-        print(pair_frequency)
-
-        # Testing the merge logic for the byte-pairs
-        merged = self.merge_tokens(256, (116, 104), b_array)
         
-        print(merged)
+        for i in range(100):
+
+            print(b_array)
+
+            top_pair, top_frequency = sorted(self.rank_pairs(b_array).items(), key = lambda x: x[1], reverse = True)[0]
+
+            print(top_pair, top_frequency)
+            
+            if top_frequency ==1:
+                break
+            id = random.sample(range(256, 500), 1).pop()
+
+            # Testing the merge logic for the byte-pairs
+            b_array = self.merge_tokens(id, top_pair, b_array)
             
 
 def main():
     bpe_tokenizer = BPETokenizer(vocab=dict())
-    bpe_tokenizer.tokenize(input="the cat in the hat")
+    bpe_tokenizer.tokenize(input="ant ant ant ant ant ant ants ants ants plant plant plants gigantic gigantic gigantic")
     #"ant ant ant ant ant ant ants ants ants plant plant plants gigantic gigantic gigantic")
 
 
