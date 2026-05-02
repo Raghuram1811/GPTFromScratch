@@ -1,11 +1,13 @@
-import random
+import math
 
 
 class BPETokenizer():
 
-    def __init__(self, vocab: dict):
-        self.vocab = vocab
-
+    def __init__(self):
+        self.merges = dict()
+        self.next_id = 256
+        self.vocab = {i: bytes([i]) for i in range(0, 256)}
+    
     def rank_pairs(self, token_ids: list):
         counts={}
         for idx in range(len(token_ids)-1):
@@ -25,30 +27,42 @@ class BPETokenizer():
                 idx+=1
         return new_tokens
 
-    def tokenize(self, input: str):
+    def tokenize(self, b_array: list[int], top_frequency:float = math.inf):
 
-        b_array = list(input.encode('utf-8'))
-        
-        for i in range(100):
+        if top_frequency <= 1:
+            return b_array
 
-            print(b_array)
+        pair_counts = self.rank_pairs(b_array)
 
-            top_pair, top_frequency = sorted(self.rank_pairs(b_array).items(), key = lambda x: x[1], reverse = True)[0]
+        if not pair_counts:
+            return b_array
 
-            print(top_pair, top_frequency)
-            
-            if top_frequency ==1:
-                break
-            id = random.sample(range(256, 500), 1).pop()
+        top_pair, top_frequency = sorted(pair_counts.items(), key = lambda x: x[1], reverse = True)[0]
 
-            # Testing the merge logic for the byte-pairs
-            b_array = self.merge_tokens(id, top_pair, b_array)
-            
+        id = self.next_id
+        self.next_id+=1
+
+        self.merges[top_pair] = id
+        self.vocab[id] = self.vocab[top_pair[0]] + self.vocab[top_pair[1]]
+
+        b_array = self.merge_tokens(id, top_pair, b_array)
+
+        return self.tokenize(b_array=b_array, top_frequency=top_frequency)
 
 def main():
-    bpe_tokenizer = BPETokenizer(vocab=dict())
-    bpe_tokenizer.tokenize(input="ant ant ant ant ant ant ants ants ants plant plant plants gigantic gigantic gigantic")
-    #"ant ant ant ant ant ant ants ants ants plant plant plants gigantic gigantic gigantic")
+    
+    input_string = """ant ant ant ant ant ant ants ants ants plant plant plants gigantic gigantic gigantic"""
+    encoded_string = input_string.encode('utf-8')
+    
+    bpe_tokenizer = BPETokenizer()
+    bpe_tokenizer.tokenize(b_array=list(encoded_string))
+
+    # for pair, new_id in bpe_tokenizer.merge.items():
+    #     print(pair, "=>", new_id, bpe_tokenizer.vocab[new_id])
+    
+    # Print the updated Vocabulary after BPE-Tokenization is done.
+    for item in bpe_tokenizer.vocab.items():
+        print(item)
 
 
 if __name__ == '__main__':
