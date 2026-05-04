@@ -16,7 +16,7 @@ This project demystifies Large Language Models (LLMs) by implementing core trans
 
 ## 🏗️ Project Architecture
 
-```
+
 GPTFromScratch/
 ├── 1_tokenization/          # Text to token conversion
 ├── 2_embeddings/            # Word and positional embeddings
@@ -28,7 +28,6 @@ GPTFromScratch/
 ├── 8_fine_tuning/           # Task-specific fine-tuning
 ├── 9_rag/                   # Retrieval-Augmented Generation
 └── 10_serving/              # Model deployment and serving
-```
 
 ## 📚 Learning Path
 
