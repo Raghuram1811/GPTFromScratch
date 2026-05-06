@@ -4,11 +4,13 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-openai = "*"
-requests = "*"
 tiktoken = "*"
+openai = "*"
+torch = "*"
+requests = "*"
+numpy = "<2.0"
 
 [dev-packages]
 
 [requires]
-python_version = "3.14"
+python_version = "3.11"
