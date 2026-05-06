@@ -6,8 +6,8 @@ import sys
 
 def main(sample_token=None):
 
-    corpus_file = os.path.join(os.path.abspath("Corpus"), "sample.txt")
-    special_tokens = os.path.join(os.path.abspath("Corpus"), "special_tokens.txt")
+    corpus_file = os.path.join(os.path.abspath("preprocessor"), "Tokenizer/Corpus/sample.txt")
+    special_tokens = os.path.join(os.path.abspath("preprocessor"), "Tokenizer/Corpus/special_tokens.txt")
 
     # Build the vocabulary from the corpus file
     vocabBuilder = VocabBuilder()

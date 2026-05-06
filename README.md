@@ -1,6 +1,4 @@
-I'll help you create a comprehensive README.md for your GPT from Scratch repository. Let me first check the current state of the repository to understand what's already there.I'll create a comprehensive README.md for your GPT from scratch repository. Here's a well-structured version:
 
-```markdown name=README.md url=https://github.com/Raghuram1811/GPTFromScratch/blob/main/README.md
 # GPT From Scratch 🚀
 
 A comprehensive, from-scratch implementation of a GPT-style language model with a focus on understanding, extending, and productionizing LLM systems. This repository guides you through building a mini GPT model step-by-step, from fundamentals to production-ready applications.
