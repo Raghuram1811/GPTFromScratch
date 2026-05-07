@@ -19,7 +19,7 @@ project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(_
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
-from preprocessor.Tokenizer.tiktokenizer import TikTokenizer
+from preprocessor.tokenizer.tiktokenizer import TikTokenizer
 from torch.utils.data import DataLoader, Dataset
 
 
@@ -97,7 +97,7 @@ class DataPreProcessor(Dataset):
         Returns:
             tuple: (input_tensor, target_tensor) for the given index.
         """
-        return self.input[idx], self.target[idx]
+        return torch.tensor(self.input[idx], dtype=torch.long) # Optionally, we can also return the target as long tensor, i.e self.target[idx].long() if needed for loss calculation, torch.tensor(self.target[idx], dtype=torch.long), torch.tensor(self.target[idx], dtype=torch.long)
     
     def __gettensors__(self, idx):
         """
@@ -182,8 +182,8 @@ Tendulkar is regarded as a symbol of national pride in India for his achievement
     
     # Uncomment below to verify data loading and inspect sample batches:
     # print("DataLoader created successfully. Sample batches:")
-    # for idx, batch in enumerate(torch_wrapper.dataloader):
-    #     print(f"Batch {idx+1}: {batch}")
+    for batch in enumerate(torch_wrapper.dataloader):
+        print(f"Batch {batch}")
 
 
 if __name__ == '__main__':
