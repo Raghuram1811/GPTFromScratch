@@ -56,7 +56,7 @@ OUTPUT_DIM = 16
 # ============================================================================
 # Self-Attention Layer
 # ============================================================================
-class SelfAttention(nn.Module):
+class SelfAttentionIllustrated(nn.Module):
     """
     Single-head scaled dot-product self-attention.
 
@@ -66,47 +66,48 @@ class SelfAttention(nn.Module):
         use_bias: Whether linear projections should include bias terms.
 
     Example:
-        >>> attention = SelfAttention(input_dim=768, output_dim=768)
+        >>> attention = SelfAttentionIllustrated(input_dim=768, output_dim=768)
         >>> x = torch.randn(4, 128, 768)
         >>> context, weights = attention(x)
         >>> context.shape
         torch.Size([4, 128, 768])
     """
-
-    def __init__(self, input_dim: int, output_dim: int, use_bias: bool = False) -> None:
-        super().__init__()
-        self.output_dim = output_dim
-
-        self.query = nn.Linear(input_dim, output_dim, bias=use_bias)
-        self.key = nn.Linear(input_dim, output_dim, bias=use_bias)
-        self.value = nn.Linear(input_dim, output_dim, bias=use_bias)
+    def __init__(self, input_dim: int, output_dim: int, use_bias: bool = False):
+        super(SelfAttentionIllustrated, self).__init__()
+        self.query_proj = nn.Linear(input_dim, output_dim, bias=use_bias)
+        self.key_proj = nn.Linear(input_dim, output_dim, bias=use_bias)
+        self.value_proj = nn.Linear(input_dim, output_dim, bias=use_bias)
 
     def forward(self, x: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
         """
-        Compute self-attention for a batch of token embeddings.
+        Compute self-attention for input tensor x.
 
         Args:
-            x: Tensor with shape (batch_size, context_length, input_dim).
-
+            x: Input embeddings of shape (batch_size, context_length, input_dim).
         Returns:
-            A tuple containing:
-            - context_vectors: Tensor with shape
-              (batch_size, context_length, output_dim).
-            - attention_weights: Tensor with shape
-              (batch_size, context_length, context_length).
+            context: Output context vectors of shape (batch_size, context_length, output_dim).
+            attention_weights: Attention weights of shape (batch_size, context_length, context_length).
         """
-        queries = self.query(x)
-        keys = self.key(x)
-        values = self.value(x)
 
-        attention_scores = queries @ keys.transpose(-2, -1) # Shape: (batch_size, context_length, context_length), (-2, -1) means we transpose the last two dimensions of keys for proper matrix multiplication
-        attention_scores = attention_scores / (self.output_dim ** 0.5)
-        attention_weights = torch.softmax(attention_scores, dim=-1) # dim=-1 means we apply softmax across the last dimension (context_length) to get attention weights that sum to 1 for each query token
+        batch_size, context_length, _ = x.size()
 
-        context_vectors = attention_weights @ values
-        return context_vectors, attention_weights
+        # Linear projections to get queries, keys, values
+        queries = self.query_proj(x)  # (batch_size, context_length, output_dim)
+        keys = self.key_proj(x)       # (batch_size, context_length, output_dim)
+        values = self.value_proj(x)   # (batch_size, context_length, output_dim)
 
+        # Compute attention scores: Q @ K^T / sqrt(d_k)
+        d_k = queries.size(-1)
+        scores = torch.matmul(queries, keys.transpose(-2, -1)) / torch.sqrt(torch.tensor(d_k))
 
+        # Apply softmax to get attention weights
+        attention_weights = torch.softmax(scores, dim=-1)
+
+        # Compute context vectors as weighted sum of values
+        context = torch.matmul(attention_weights, values)
+
+        return context, attention_weights   
+    
 # ============================================================================
 # Helper Functions
 # ============================================================================
@@ -166,7 +167,7 @@ def main() -> None:
     print("=" * 80)
     print("STEP 2: APPLY SELF-ATTENTION")
     print("=" * 80)
-    attention_layer = SelfAttention(
+    attention_layer = SelfAttentionIllustrated(
         input_dim=EMBEDDING_DIM,
         output_dim=OUTPUT_DIM,
         use_bias=False,
