@@ -1,8 +1,40 @@
-import torch
+"""
+===============================================================================
+Self-Attention Module
+===============================================================================
+
+This module demonstrates scaled dot-product self-attention, the core operation
+inside GPT-style transformer blocks.
+
+Key Concepts:
+- Query: What each token is looking for.
+- Key: What each token offers for matching.
+- Value: The information each token contributes.
+- Attention Scores: Similarity between every query and every key.
+- Attention Weights: Softmax-normalized scores.
+- Context Vectors: Weighted sums of the value vectors.
+
+Input/Output Shapes:
+- Input embeddings:  (batch_size, context_length, embedding_dim)
+- Attention scores:  (batch_size, context_length, context_length)
+- Attention weights: (batch_size, context_length, context_length)
+- Output context:    (batch_size, context_length, output_dim)
+
+Author: GPTFromScratch
+Date: 2026-05-11
+===============================================================================
+"""
+
 import os
 import sys
+from typing import Tuple
 
-# Setup project root path for module imports
+import torch
+from torch import nn
+
+# ============================================================================
+# Setup Project Path
+# ============================================================================
 project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
@@ -10,50 +42,152 @@ if project_root not in sys.path:
 from preprocessor.data.prepare_data import DataPreProcessor, TorchWrapper
 
 
+# ============================================================================
+# Configuration Constants
+# ============================================================================
+VOCAB_SIZE = 50257
+CONTEXT_LENGTH = 5
+BATCH_SIZE = 2
+STRIDE = 2
+EMBEDDING_DIM = 16
+OUTPUT_DIM = 16
 
-def main():
-    text = """ The next day is brighter since we started learning about self attention. We can now understand how each word in a sentence can influence the representation of other words, allowing us to capture long-range dependencies and contextual relationships more effectively. This is a crucial step in building powerful language models like GPT, which rely on self attention mechanisms to generate coherent and contextually relevant text. With this knowledge, we can now explore how to implement self attention in our own models and further enhance our understanding of natural language processing. """    
 
-    # Step 1: Prepare the dataset using DataPreProcessor
-    dataset = DataPreProcessor(text=text, model="gpt2", context_length=5, stride=2)
-    torch_wrapper = TorchWrapper(dataset=dataset, batch_size=1, shuffle=False)
-    print(f"Dataset created with {len(dataset)} samples")
-    
-    # Step 2: Attention mechanism demonstration
-    input_dimension = 5 # For the query, key, value vectors - 5 is just an example dimension for demonstration purposes. In a real model, this would typically be the embedding dimension (e.g., 768 for GPT-2 small).  
-    output_dimension = 5 # Output dimension of the attention layer - 5, In a real model, this would typically be the embedding dimension (e.g., 768 for GPT-2 small).  
+# ============================================================================
+# Self-Attention Layer
+# ============================================================================
+class SelfAttention(nn.Module):
+    """
+    Single-head scaled dot-product self-attention.
 
-    W_q = W_k = W_v = torch.nn.Parameter(torch.randn(input_dimension, output_dimension), requires_grad=False)  # Query, key and value weight matrices initialized.
-    print(f"\n\n Initialized weight matrices W_q, W_k, W_v with shape: {W_q.shape}, {W_k.shape}, {W_v.shape} \n\n")
+    Args:
+        input_dim: Size of each input token embedding.
+        output_dim: Size of the query, key, value, and output vectors.
+        use_bias: Whether linear projections should include bias terms.
 
-    # Now to get the query vector for a sample input row from dataset above, we would do:
-    sample_input = torch_wrapper.dataloader.dataset[1]  # Get the input row for the first sample.
-    print(f"Sample input from dataset: {sample_input}\n")
+    Example:
+        >>> attention = SelfAttention(input_dim=768, output_dim=768)
+        >>> x = torch.randn(4, 128, 768)
+        >>> context, weights = attention(x)
+        >>> context.shape
+        torch.Size([4, 128, 768])
+    """
 
-    query_vector_sample = sample_input.float() @ W_q   # Compute the query vector by multiplying the input with the query weight matrix.
-    print(f"For input sample {sample_input}, the computed query vector has shape: {query_vector_sample.shape} and values: \n{query_vector_sample}\n \n")
+    def __init__(self, input_dim: int, output_dim: int, use_bias: bool = False) -> None:
+        super().__init__()
+        self.output_dim = output_dim
 
-    # Similarly, we can compute the key and value vectors for the same input sample:
-    key_vector_sample = sample_input.float() @ W_k     # Compute the key vector by multiplying the input with the key weight matrix.  
-    value_vector_sample = sample_input.float() @ W_v   # Compute the value vector by multiplying the input with the value weight matrix.
-    print(f"For input sample {sample_input}, the computed key vector has shape: {key_vector_sample.shape} and values: \n{key_vector_sample}\n \n")
-    print(f"For input sample {sample_input}, the computed value vector has shape: {value_vector_sample.shape} and values: \n{value_vector_sample}\n \n")
+        self.query = nn.Linear(input_dim, output_dim, bias=use_bias)
+        self.key = nn.Linear(input_dim, output_dim, bias=use_bias)
+        self.value = nn.Linear(input_dim, output_dim, bias=use_bias)
 
-    # Now that we got the Query, Key matrices, we need to compute Q.K^T to get the attention scores, and then apply softmax to get the attention weights. 
-    # Finally, we will multiply the attention weights with the value vector to get the output of the attention mechanism for this sample input.
+    def forward(self, x: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+        """
+        Compute self-attention for a batch of token embeddings.
 
-    print("==** Attention Score Calculation (Q.K^T) ***==")
-    # Let us check the shape of Q and K^T before we do the multiplication to ensure they are compatible for matrix multiplication.
-    print(f"\n\nShape of query vector: {query_vector_sample.shape}", f"Shape of key^T vector: {key_vector_sample.T.shape}")
-    attention_scores = q_k_transpose = query_vector_sample @ key_vector_sample.T  # Compute Q.K^T to get attention scores.
-    print(f"Shape of Q.K^T (attention scores): {q_k_transpose.shape} and values: \n{q_k_transpose}\n \n")
-    attention_scores = attention_scores / (output_dimension ** 0.5)  # Scale the attention scores by the square root of the output dimension (d_k) to prevent large values that can lead to vanishing gradients.
-    print(f"Attention score normalized and soft-maxed: {attention_scores} \n \n")
-    print("==** Attention Output Calculation (Attention Weights . Value) ***==")
+        Args:
+            x: Tensor with shape (batch_size, context_length, input_dim).
 
-    attention_output = attention_scores * value_vector_sample  # Multiply the attention weights with the value vector to get the output of the attention mechanism.
-    print(f"Shape of attention output: {attention_output.shape} and values: \n{attention_output}\n \n")
+        Returns:
+            A tuple containing:
+            - context_vectors: Tensor with shape
+              (batch_size, context_length, output_dim).
+            - attention_weights: Tensor with shape
+              (batch_size, context_length, context_length).
+        """
+        queries = self.query(x)
+        keys = self.key(x)
+        values = self.value(x)
 
+        attention_scores = queries @ keys.transpose(-2, -1) # Shape: (batch_size, context_length, context_length), (-2, -1) means we transpose the last two dimensions of keys for proper matrix multiplication
+        attention_scores = attention_scores / (self.output_dim ** 0.5)
+        attention_weights = torch.softmax(attention_scores, dim=-1) # dim=-1 means we apply softmax across the last dimension (context_length) to get attention weights that sum to 1 for each query token
+
+        context_vectors = attention_weights @ values
+        return context_vectors, attention_weights
+
+
+# ============================================================================
+# Helper Functions
+# ============================================================================
+def build_sample_embeddings() -> torch.Tensor:
+    """
+    Create a small batch of token plus positional embeddings for demonstration.
+
+    Returns:
+        Tensor with shape (BATCH_SIZE, CONTEXT_LENGTH, EMBEDDING_DIM).
+    """
+    text = """
+    Self-attention lets each token decide which other tokens matter for building
+    its next representation. This simple example prepares token embeddings and
+    sends them through one attention layer.
+    """
+
+    dataset = DataPreProcessor(
+        text=text,
+        model="gpt2",
+        context_length=CONTEXT_LENGTH,
+        stride=STRIDE,
+    )
+    torch_wrapper = TorchWrapper(
+        dataset=dataset,
+        batch_size=BATCH_SIZE,
+        shuffle=False,
+    )
+
+    token_ids = next(iter(torch_wrapper.dataloader))
+    token_embedding_layer = nn.Embedding(VOCAB_SIZE, EMBEDDING_DIM)
+    positional_embedding_layer = nn.Embedding(CONTEXT_LENGTH, EMBEDDING_DIM)
+
+    token_embeddings = token_embedding_layer(token_ids)
+    positions = torch.arange(CONTEXT_LENGTH)
+    positional_embeddings = positional_embedding_layer(positions).unsqueeze(0)
+
+    print(f"Token id batch shape:        {token_ids.shape}")
+    print(f"Token embeddings shape:      {token_embeddings.shape}")
+    print(f"Positional embeddings shape: {positional_embeddings.shape}")
+
+    return token_embeddings + positional_embeddings
+
+
+# ============================================================================
+# Main Function
+# ============================================================================
+def main() -> None:
+    """Run a small end-to-end self-attention demonstration."""
+    torch.manual_seed(123)
+
+    print("\n" + "=" * 80)
+    print("STEP 1: CREATE INPUT EMBEDDINGS")
+    print("=" * 80)
+    input_embeddings = build_sample_embeddings()
+    print(f"Combined input shape:        {input_embeddings.shape}\n")
+
+    print("=" * 80)
+    print("STEP 2: APPLY SELF-ATTENTION")
+    print("=" * 80)
+    attention_layer = SelfAttention(
+        input_dim=EMBEDDING_DIM,
+        output_dim=OUTPUT_DIM,
+        use_bias=False,
+    )
+
+    context_vectors, attention_weights = attention_layer(input_embeddings)
+
+    print(f"Attention weights shape:     {attention_weights.shape}")
+    print(f"Context vectors shape:       {context_vectors.shape}\n")
+
+    print("=" * 80)
+    print("STEP 3: INSPECT ONE TOKEN")
+    print("=" * 80)
+    print("Attention weights for batch 0, token 0:")
+    print(attention_weights[0, 0])
+    print("\nContext vector for batch 0, token 0:")
+    print(context_vectors[0, 0])
+
+
+# ============================================================================
+# Entry Point
+# ============================================================================
 if __name__ == "__main__":
-    print("This is a test file for implementing self attention mechanism.")
     main()
