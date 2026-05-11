@@ -106,6 +106,17 @@ class SelfAttentionIllustrated(nn.Module):
         # Compute context vectors as weighted sum of values
         context = torch.matmul(attention_weights, values)
 
+        
+        print(f" Causal Attention Scores demonstated below (before masking):")    
+        # Applying masking would involve creating a mask tensor of shape (context_length, context_length) where positions that should not attend to future tokens are set to -inf before the softmax step. This ensures that the model only attends to previous tokens in the sequence.
+        mask_tensor = torch.triu(attention_weights.new_full((context_length, context_length), float('-inf')), diagonal=1)
+        masked_scores = scores + mask_tensor.unsqueeze(0)  # Add mask to scores
+        masked_attention_weights = torch.softmax(masked_scores, dim=-1)
+        masked_context = torch.matmul(masked_attention_weights, values)
+
+        print(f" Masked Attention Scores (after applying causal mask): {masked_context}")
+
+
         return context, attention_weights   
     
 # ============================================================================
