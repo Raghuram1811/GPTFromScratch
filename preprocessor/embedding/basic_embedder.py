@@ -97,7 +97,7 @@ def main() -> None:
     )
     
     print(f"Dataset created with {len(dataset)} samples")
-    print(f"Batch size: {BATCH_SIZE}\n")
+    print(f"Batch size: {BATCH_SIZE} \n")
     
     
     # ========================================================================
@@ -120,17 +120,19 @@ def main() -> None:
     print(f"  - Max positions: {CONTEXT_LENGTH}")
     print(f"  - Embedding dimension: {EMBEDDING_DIM}\n")
     
+    #  Positional embeddings initialized with max positions equal to context length, since we only need positional encodings for the maximum sequence length we will process. Each position (0 to CONTEXT_LENGTH-1) will have its own embedding vector of size EMBEDDING_DIM.
     positional_embedding_layer = torch.nn.Embedding(
         num_embeddings=CONTEXT_LENGTH,
         embedding_dim=EMBEDDING_DIM
     )
     
-    # Pre-compute positional embeddings
+    # Pre-compute positional embeddings for all positions (0 to CONTEXT_LENGTH-1), example: for context_length=5, positions would be [0, 1, 2, 3, 4]
     positions = torch.arange(CONTEXT_LENGTH)
     positional_embeddings = positional_embedding_layer(positions)
     
     # Reshape for batch broadcasting: (context_length, embedding_dim) 
-    # -> (1, context_length, embedding_dim)
+    # -> (1, context_length, embedding_dim) 
+    # Reason for unsqueeze(0): to allow broadcasting across batch dimension, 0 means we add a new dimension at the front for batch size
     positional_embeddings = positional_embeddings.unsqueeze(0)
     
     print(f"Positional embeddings shape: {positional_embeddings.shape}")
