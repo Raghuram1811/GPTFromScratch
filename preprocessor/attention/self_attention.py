@@ -109,7 +109,7 @@ class SelfAttentionIllustrated(nn.Module):
         
         print(f" Causal Attention Scores demonstated below (before masking):")    
         # Applying masking would involve creating a mask tensor of shape (context_length, context_length) where positions that should not attend to future tokens are set to -inf before the softmax step. This ensures that the model only attends to previous tokens in the sequence.
-        mask_tensor = torch.triu(attention_weights.new_full((context_length, context_length), float('-inf')), diagonal=1)
+        mask_tensor = torch.triu(attention_weights.new_full((context_length, context_length), float('-inf')), diagonal=1) # triu returns upper triangular part of the matrix, diagonal=1 means we start masking from the first diagonal above the main diagonal, so that tokens can attend to themselves and previous tokens but not future tokens.
         masked_scores = scores + mask_tensor.unsqueeze(0)  # Add mask to scores
         masked_attention_weights = torch.softmax(masked_scores, dim=-1)
         masked_context = torch.matmul(masked_attention_weights, values)
@@ -147,7 +147,7 @@ def build_sample_embeddings() -> torch.Tensor:
         shuffle=False,
     )
 
-    token_ids = next(iter(torch_wrapper.dataloader))
+    token_ids = next(iter(torch_wrapper.dataloader)) # next(iter(...)) is a common way to get the first batch from a DataLoader. It returns a tuple of (input_tensor, target_tensor) for the first batch. Since we only need the input tensor for building embeddings, we can unpack it directly.
     token_embedding_layer = nn.Embedding(VOCAB_SIZE, EMBEDDING_DIM)
     positional_embedding_layer = nn.Embedding(CONTEXT_LENGTH, EMBEDDING_DIM)
 
