@@ -147,7 +147,7 @@ def build_sample_embeddings() -> torch.Tensor:
         shuffle=False,
     )
 
-    token_ids = next(iter(torch_wrapper.dataloader))
+    token_ids = next(iter(torch_wrapper.dataloader)) # next(iter(...)) is a common way to get the first batch from a DataLoader. It returns a tuple of (input_tensor, target_tensor) for the first batch. Since we only need the input tensor for building embeddings, we can unpack it directly.
     token_embedding_layer = nn.Embedding(VOCAB_SIZE, EMBEDDING_DIM)
     positional_embedding_layer = nn.Embedding(CONTEXT_LENGTH, EMBEDDING_DIM)
 
