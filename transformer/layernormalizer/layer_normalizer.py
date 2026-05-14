@@ -34,9 +34,9 @@ class LayerNormalizer(nn.Module):
         super(LayerNormalizer, self).__init__()
     
     def forward(self) -> Tuple[torch.Tensor, torch.Tensor]:
-        mean = self.input.mean(dim=-1, keepdim=True)
-        variance = self.input.var(dim=-1, keepdim=True)
-        normalized_input = (self.input - mean)/((variance + self.eps)** 0.5) # Formulaic implementation of standardizer (x-mean/standard_deviation)
+        mean = self.input.mean(dim=-1, keepdim=True) # -1 means we calculate mean across the columns of the input matrix
+        variance = self.input.var(dim=-1, keepdim=True) # -1 means we calculate variance across the columns of the input matrix
+        normalized_input = (self.input - mean)/((variance + self.eps)** 0.5) # Formulaic implementation of standardizer (x-mean/standard_deviation); sqrt(variance) gives standard deviation - we add self.eps to ensure a fraction value is added incase variance moves to 0. This ensures we avoid dividing by 0.
         return normalized_input
 
 # ============================================================================
