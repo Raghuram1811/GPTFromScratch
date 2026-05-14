@@ -32,7 +32,9 @@ class MultiHeadAttentionIllustrated(nn.Module):
 
     Args:
         input_dim: Size of each input token embedding.
-        output_dim: Size of the query, key, value, and output vectors for each head.
+        output_dim: Size of the query, key, value, and output vectors for each hea
+        
+        d.
         num_heads: Number of attention heads to use.
         use_bias: Whether linear projections should include bias terms.
 
@@ -51,6 +53,8 @@ class MultiHeadAttentionIllustrated(nn.Module):
         self.num_heads = num_heads
         self.output_dim = output_dim
 
+        self.head_dim = self.output_dim // self.num_heads
+
         self.query_proj = nn.Linear(input_dim, output_dim, bias=use_bias)
         self.key_proj = nn.Linear(input_dim, output_dim, bias=use_bias)
         self.value_proj = nn.Linear(input_dim, output_dim, bias=use_bias)
@@ -64,7 +68,7 @@ class MultiHeadAttentionIllustrated(nn.Module):
         values = self.value_proj(x).view(batch_size, context_length, self.num_heads, -1).transpose(1, 2)  # Shape: (batch_size, num_heads, context_length, head_dim)
 
         attention_scores = queries @ keys.transpose(-2, -1)  # Shape: (batch_size, num_heads, context_length, context_length)
-        attention_scores = attention_scores / (self.output_dim // self.num_heads) ** 0.5
+        attention_scores = attention_scores / (self.output_dim // self.num_heads) ** 0.5 # divide with sqrt of head dimensions
         attention_weights = torch.softmax(attention_scores, dim=-1) # Shape: (batch_size, num_heads, context_length, context_length)
         context_vectors = attention_weights @ values  # Shape: (batch_size, num_heads, context_length, head_dim)
         context_vectors = context_vectors.transpose(1, 2).contiguous().view(batch_size, context_length, self.output_dim)  # Shape: (batch_size, context_length,output_dim)
